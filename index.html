@@ -5,6 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> كشري وطواجن العسكري </title>
+    <!-- إعدادات التطبيق للموبايل -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="theme-color" content="#b01c1c">
+    <link rel="manifest" href="manifest.json">
 
     <!-- أيقونة الموقع في التابة -->
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1046/1046747.png" type="image/png">
@@ -171,6 +176,10 @@
             border: 2px solid #ddd;
             border-radius: 10px;
             display: block;
+        }
+
+        body {
+            overscroll-behavior-y: contain;
         }
 
         .admin-btn {
@@ -1225,6 +1234,11 @@
 
             document.getElementById('modal-body').innerHTML = html;
             document.getElementById('detail-overlay').style.display = 'block';
+        }
+        function backToStore() {
+            document.getElementById('admin-panel').style.display = 'none';
+            document.getElementById('store-front').style.display = 'block';
+            window.scrollTo(0, 0);
         }
 
         window.onscroll = () => { document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50); };
