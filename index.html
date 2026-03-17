@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> كشري وطواجن العسكري </title>
+
+    <!-- أيقونة الموقع في التابة -->
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1046/1046747.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700&family=El+Messiri:wght@700&display=swap"
+        rel="stylesheet">
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --primary-red: #b01c1c;
+            --accent-gold: #f39c12;
+            --dark-blue: #2c3e50;
+            --glass-white: rgba(255, 255, 255, 0.94);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        body {
+            background: url('https://images.unsplash.com/photo-1593504049359-74330189a355?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+            color: #1a1a1a;
+            border-left: 10px solid var(--primary-red);
+            border-right: 10px solid var(--primary-red);
+            user-select: none;
+            min-height: 100vh;
+        }
+
+        .glass-panel {
+            background: var(--glass-white);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--primary-red);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Navbar */
+        nav {
+            position: fixed;
+            top: 0;
+            width: calc(100% - 20px);
+            height: 90px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            padding: 0 5%;
+            z-index: 1000;
+            margin: 0 10px;
+            transition: 0.4s;
+        }
+
+        nav.scrolled {
+            background: #fff;
+            border-bottom: 3px solid var(--accent-gold);
+        }
+
+        .logo-clean {
+            height: 100px;
+            width: auto;
+            cursor: pointer;
+            transition: 0.4s;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+        }
+
+        /* Slider */
+        .hero-slider {
+            width: 100%;
+            height: 70vh;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 8px solid var(--accent-gold);
+            margin-top: 20px;
+        }
+
+        .slides {
+            display: flex;
+            height: 100%;
+            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+        }
+
+        .slide {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 100%;
+        }
+
+        .slide-img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: cover;
+            border: 8px solid white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Grid & Cards */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+            padding: 20px 5%;
+        }
+
+        .card {
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.4s;
+            border-bottom: 6px solid var(--accent-gold) !important;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+        }
+
+        .card img {
+            width: 100%;
+            height: 260px;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        /* Admin & Modals */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 4000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal-content {
+            max-width: 900px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+        }
+
+        .vertical-form input,
+        .vertical-form select,
+        .vertical-form textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            display: block;
+        }
+
+        .admin-btn {
+            padding: 12px 24px;
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .cart-float {
+            position: fixed;
+            bottom: 30px;
+            left: 40px;
+            background: #27ae60;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            z-index: 1500;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .icon-trigger {
+            font-size: 24px;
+            color: var(--primary-red);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .icon-trigger:hover {
+            color: var(--accent-gold);
+            transform: scale(1.2);
+        }
+
+        .brand-text {
+            font-family: 'El Messiri', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(to right, #b01c1c, #f39c12);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        nav {
+            width: 100% !important;
+            margin: 0 !important;
+            left: 0 !important;
+            padding: 0 25px !important;
+            /* مسافة بسيطة من الحواف */
+        }
+
+        .nav-left {
+            /* هذه الخاصية ستدفع كل ما بداخلها لأقصى اليسار في وضع الـ RTL */
+            justify-content: flex-end !important;
+        }
+
+        .icon-trigger {
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .icon-trigger:hover {
+            transform: scale(1.1);
+            color: var(--accent-gold);
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px;
+            background: var(--dark-blue);
+            color: white;
+            margin-top: 50px;
+        }
+
+        .designer-signature {
+            font-weight: bold;
+            color: #FFD700;
+            animation: goldGlow 2s infinite ease-in-out;
+        }
+
+        @keyframes goldGlow {
+            0% {
+                text-shadow: 0 0 5px #FFD700;
+            }
+
+            50% {
+                text-shadow: 0 0 20px #FFD700;
+            }
+
+            100% {
+                text-shadow: 0 0 5px #FFD700;
+            }
+        }
+
+        #sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 280px;
+            height: 100%;
+            z-index: 5000;
+            transition: 0.5s;
+            padding: 30px 20px;
+        }
+
+        #sidebar.open {
+            right: 0;
+        }
+
+        .side-item {
+            padding: 15px;
+            border-bottom: 1px dashed #ddd;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .side-item:hover {
+            color: var(--primary-red);
+            padding-right: 25px;
+            transition: 0.3s;
+        }
+    </style>
+</head>
+
+<body oncontextmenu="return false;">
+
+    <!-- القائمة الجانبية -->
+    <div id="sidebar" class="glass-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+            <h3 style="color:var(--primary-red)">أصناف العسكري 🥘</h3>
+            <i class="fa fa-times icon-trigger" onclick="toggleSidebar()"></i>
+        </div>
+        <div id="side-categories">
+            <div class="side-item" onclick="filterByCategory('الكل')">عرض الكل</div>
+        </div>
+    </div>
+
+    <!-- شريط البحث -->
+    <div id="search-bar" class="glass-panel"
+        style="display:none; position:fixed; top:100px; right:20px; width:300px; z-index:2000; padding:10px;">
+        <input type="text" id="search-input" placeholder="ابحث عن وجبة..." oninput="liveSearch()"
+            style="border:none; background:none; outline:none; width:100%;">
+    </div>
+
+    <!-- الهيدر (الناف بار) -->
+    <nav id="navbar" style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 20px;">
+        <div class="nav-right" style="display: flex; justify-content: flex-start;">
+            <i class="fa fa-search icon-trigger" onclick="toggleSearch()" title="بحث"></i>
+        </div>
+
+        <div class="nav-center" style="display: flex; flex-direction: column; align-items: center; position: relative;">
+            <img src="https://cdn-icons-png.flaticon.com/512/1046/1046747.png" class="logo-clean"
+                onclick="backToStore()" style="height: 80px;">
+            <div class="brand-text" style="font-size: 20px; margin-top: -10px;">كشري وطواجن العسكري</div>
+        </div>
+
+        <div class="nav-left" style="display: flex; justify-content: flex-end; align-items: center; gap: 15px;">
+            <div onclick="openDigitalMenu()" class="icon-trigger"
+                style="font-size: 14px; font-weight: bold; background: var(--primary-red); color: #fff; padding: 6px 15px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                <i class="fa fa-book-open"></i> المنيو
+            </div>
+            <i class="fa fa-bars icon-trigger" onclick="toggleSidebar()" title="الفئات" style="font-size: 22px;"></i>
+            <i class="fa fa-user-shield icon-trigger" onclick="loginAdmin()" title="الإدارة"
+                style="font-size: 20px;"></i>
+        </div>
+    </nav>
+
+    <!-- واجهة المتجر (ما يراه الزبون) -->
+    <main id="store-front">
+        <section class="hero-slider">
+            <div class="slides" id="heroSlider">
+                <!-- الصور يتم تحميلها برمجياً من الفيربيز -->
+            </div>
+        </section>
+
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 40px 5%; text-align: center;">
+            <div class="glass-panel" style="padding: 20px; cursor: pointer;" onclick="contactSupport()">
+                <i class="fa fa-phone-alt" style="font-size: 30px; color: var(--primary-red);"></i>
+                <h4>اطلب دليفري</h4>
+            </div>
+            <div class="glass-panel" style="padding: 20px; cursor: pointer;" onclick="showShippingInfo()">
+                <i class="fa fa-truck" style="font-size: 30px; color: var(--primary-red);"></i>
+                <h4>توصيل سريع لكل مكان</h4>
+            </div>
+        </div>
+
+        <h2 style="text-align: center; margin: 20px 0; color: #fff; text-shadow: 2px 2px 5px #000;">منيو العسكري 🔥</h2>
+        <section class="grid" id="customer-product-grid"></section>
+
+        <h2 style="text-align: center; margin: 20px 0; color: #fff; text-shadow: 2px 2px 5px #000;">عروضنا المميزة 🎁
+        </h2>
+        <section class="grid" id="customer-blog-grid"></section>
+
+        <section style="padding: 40px 5%; text-align: center;">
+            <h2 style="color:#fff; text-shadow: 2px 2px 5px #000;">آراء الأكيلة 😋</h2>
+            <!-- هنا ستظهر الآراء -->
+            <div id="reviews-display"
+                style="max-width: 700px; margin: 20px auto; display: flex; flex-direction: column; gap: 15px;">
+                <p style="color: #eee;">جاري تحميل الآراء...</p>
+            </div>
+
+            <!-- فورم إرسال رأي جديد -->
+            <div class="glass-panel vertical-form" style="padding: 25px; max-width: 600px; margin: 20px auto;">
+                <input type="text" id="rev-name" placeholder="اسمك الكريم">
+                <textarea id="rev-text" placeholder="رأيك في أكل العسكري..." rows="2"></textarea>
+                <button class="admin-btn" onclick="sendReview()">إرسال التقييم ✨</button>
+            </div>
+        </section>
+
+        <footer>
+            جميع الحقوق محفوظة &copy; 2026 | مطعم العسكري <br>
+            تصميم وتطوير: <span class="designer-signature">Mohamed Salah Elsayed</span>
+        </footer>
+    </main>
+
+    <!-- لوحة التحكم (مخفية، تظهر فقط عند تسجيل الدخول) -->
+    <div id="admin-panel" style="display:none; padding:120px 5% 50px; background:#f4f4f4; min-height:100vh;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+            <h2 style="color:var(--primary-red)">⚙️ لوحة إدارة مطعم العسكري</h2>
+            <button class="admin-btn" style="background:#333;" onclick="backToStore()">العودة للمطعم</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:25px;">
+
+            <!-- العمود 1: السلايدر والمدونة -->
+            <div class="glass-panel vertical-form" style="padding:20px;">
+                <h4 style="color:var(--primary-red)"><i class="fa fa-images"></i> إدارة السلايدر</h4>
+                <textarea id="adm-slider-input" rows="3" placeholder="روابط صور السلايدر (رابط في كل سطر)"></textarea>
+                <button class="admin-btn" style="width:100%; background:#f39c12; margin-bottom:15px;"
+                    onclick="handleSliderSave()">تحديث السلايدر 🔥</button>
+
+                <hr>
+                <h4 style="color:var(--primary-red); margin-top:15px;"><i class="fa fa-edit"></i> إضافة عرض (المدونة)
+                </h4>
+                <input type="hidden" id="edit-blog-id">
+                <input type="text" id="adm-blog-title" placeholder="عنوان العرض">
+                <input type="text" id="adm-blog-img" placeholder="رابط صورة العرض">
+                <textarea id="adm-blog-desc" rows="3" placeholder="تفاصيل العرض..."></textarea>
+                <button class="admin-btn" style="width:100%; background:#8e44ad;" onclick="handleBlogSave()">نشر العرض
+                    📢</button>
+            </div>
+
+            <div class="glass-panel" style="padding:20px; margin-top:20px;">
+                <h4 style="color:var(--primary-red)"><i class="fa fa-comments"></i> رقابة الآراء</h4>
+                <div id="admin-reviews-list" style="max-height: 200px; overflow-y: auto; font-size: 12px;"></div>
+            </div>
+
+            <!-- العمود 2: منيو الصور الرئيسي -->
+            <div class="glass-panel vertical-form" style="padding:20px;">
+                <h4 style="color:var(--primary-red)"><i class="fa fa-hamburger"></i> إدارة منيو الصور</h4>
+                <input type="hidden" id="edit-prod-id">
+                <input type="text" id="adm-name" placeholder="اسم الوجبة">
+                <textarea id="adm-imgs" placeholder="روابط الصور" rows="2"></textarea>
+                <input type="number" id="adm-price" placeholder="السعر">
+                <input type="text" id="adm-cat" placeholder="التصنيف (كشري/طواجن)">
+                <input type="text" id="adm-subcat" placeholder="وصف سريع">
+                <button class="admin-btn" style="width:100%;" onclick="handleProductSave()">حفظ الصنف</button>
+                <hr style="margin:15px 0;">
+                <div id="list-products" style="max-height:150px; overflow-y:auto; font-size:12px;"></div>
+            </div>
+
+            <!-- العمود 3: التواصل والشحن والمنيو السريع -->
+            <div class="glass-panel vertical-form" style="padding:20px;">
+                <h4 style="color:var(--primary-red)"><i class="fa fa-phone"></i> التواصل والدليفري</h4>
+                <textarea id="adm-delivery-nums" rows="3" placeholder="أرقام الدليفري (رقم في كل سطر)"></textarea>
+                <input type="text" id="adm-support-num" placeholder="رقم واتساب الشكاوى">
+                <button class="admin-btn" style="width:100%; background:#2c3e50; margin-bottom:15px;"
+                    onclick="saveContactSettings()">حفظ الأرقام ✅</button>
+
+                <hr>
+                <h4 style="color:var(--primary-red); margin-top:15px;"><i class="fa fa-truck"></i> شحن المحافظات</h4>
+                <div style="display:flex; gap:5px; margin-bottom:5px;">
+                    <select id="adm-gov-name" style="flex:2; padding:8px; border-radius:8px;">
+                        <option value="القاهرة">القاهرة</option>
+                        <option value="الجيزة">الجيزة</option>
+                        <option value="الإسكندرية">الإسكندرية</option>
+                        <option value="الدقهلية">الدقهلية</option>
+                        <!-- اضف باقي المحافظات حسب الحاجة -->
+                    </select>
+                    <input type="number" id="adm-gov-price" placeholder="ج.م" style="flex:1; margin:0; padding:8px;">
+                </div>
+                <button class="admin-btn" style="width:100%; background:#e67e22;" onclick="saveGovShipping()">حفظ الشحن
+                    🚚</button>
+            </div>
+
+            <!-- العمود 4: المنيو الكتابي (الرقمي) -->
+            <div class="glass-panel vertical-form" style="padding:20px; background:#fffcf5;">
+                <h4 style="color:var(--primary-red)"><i class="fa fa-book-open"></i> المنيو السريع (كتابة)</h4>
+                <input type="text" id="menu-item-name" placeholder="اسم الصنف (كشري عائلي مثلاً)">
+                <input type="number" id="menu-item-price" placeholder="السعر">
+                <input type="text" id="menu-item-section" placeholder="الركن (ركن الطواجن)">
+                <button class="admin-btn" style="width:100%; background:#2c3e50;" onclick="addMenuItem()">إضافة للمنيو
+                    الكتابي ✅</button>
+                <hr style="margin:15px 0;">
+                <div id="admin-menu-list" style="max-height:150px; overflow-y:auto; font-size:11px;"></div>
+            </div>
+
+        </div> <!-- نهاية الجريد الداخلي للإدارة -->
+    </div> <!-- نهاية لوحة التحكم الكبيرة -->
+
+    <!-- مودال التفاصيل (الوجبات) -->
+    <div id="detail-overlay" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <button onclick="closeModals()"
+                style="position:absolute; top:15px; left:15px; border:none; padding:10px; cursor:pointer;"><i
+                    class="fa fa-times"></i></button>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- مودال السلة -->
+    <div id="checkout-overlay" class="modal-overlay">
+        <div class="modal-content glass-panel vertical-form" style="max-width:500px;">
+            <h3>إتمام الطلب 🛒</h3>
+            <div id="cart-list" style="margin-bottom:15px;"></div>
+            <input type="text" id="c-name" placeholder="الاسم بالكامل">
+            <input type="tel" id="c-phone" placeholder="رقم الموبايل">
+            <textarea id="c-addr" placeholder="عنوان التوصيل"></textarea>
+            <div id="total-price-box"
+                style="padding:15px; background:#fdf2f2; border-radius:10px; font-weight:bold; margin-bottom:15px; color:var(--primary-red);">
+            </div>
+            <button class="admin-btn" style="background:#25d366; width:100%;" onclick="finalizeOrder()">إرسال
+                واتساب</button>
+        </div>
+    </div>
+
+    <!-- مودال المنيو الرقمي (الكتابي) -->
+    <div id="digital-menu-overlay" class="modal-overlay">
+        <div class="modal-content glass-panel"
+            style="max-width: 600px; background: #fff8f2; border: 3px double var(--primary-red);">
+            <button onclick="closeModals()"
+                style="position:absolute; top:15px; left:15px; border:none; background:none; font-size:20px; cursor:pointer; color:var(--primary-red);"><i
+                    class="fa fa-times-circle"></i></button>
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h2
+                    style="font-family: 'El Messiri'; color: var(--primary-red); border-bottom: 2px solid var(--accent-gold); display: inline-block; padding-bottom: 5px;">
+                    منيو العسكري الأصلي</h2>
+            </div>
+            <div id="digital-menu-content"></div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="admin-btn" style="background:#27ae60" onclick="closeModals()">إغلاق المنيو</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- أيقونة السلة الطائرة -->
+    <div class="cart-float" onclick="openCheckout()"><i class="fa fa-shopping-cart"></i> (<span
+            id="cart-count">0</span>)</div>
+
+    <script>
+        // --- 1. Firebase Configuration (البيانات الخاصة بك) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyACAwij_H5-ULnIWG4UNa7OWiLkJquIURM",
+            authDomain: "el-ascary.firebaseapp.com",
+            projectId: "el-ascary",
+            storageBucket: "el-ascary.firebasestorage.app",
+            messagingSenderId: "34415181593",
+            appId: "1:34415181593:web:6918454c279f8aa7428f88",
+            measurementId: "G-YV4G74MRWS"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let allProducts = [], allBlogs = [], cart = [], settings = { wa: "201000000000", ship: 20 };
+
+        // --- 2. Core Functions ---
+        window.onload = function () {
+            loadAllData();
+            if (sessionStorage.getItem('isAdmin') === 'true') showAdmin();
+        };
+
+        function loadAllData() {
+            // 1. تحميل الإعدادات (واتساب، شحن، دليفري)
+            db.collection("settings").doc("main").onSnapshot(snapshot => {
+                if (snapshot.exists) {
+                    settings = snapshot.data();
+                    if (document.getElementById('adm-delivery-nums')) document.getElementById('adm-delivery-nums').value = settings.deliveryNumbers || "";
+                    if (document.getElementById('adm-support-num')) document.getElementById('adm-support-num').value = settings.supportNumber || "";
+                    updateGovPreview();
+                }
+            });
+
+            // 2. تحميل الوجبات (المنتجات)
+            db.collection("products").onSnapshot(snap => {
+                const grid = document.getElementById('customer-product-grid');
+                const list = document.getElementById('list-products');
+                if (grid) grid.innerHTML = '';
+                if (list) list.innerHTML = '';
+                allProducts = [];
+
+                snap.forEach(docSnap => {
+                    const p = { id: docSnap.id, ...docSnap.data() }; allProducts.push(p);
+                    const firstImg = p.images ? p.images.split('\n')[0] : "";
+                    if (grid) grid.innerHTML += `<div class="card glass-panel" onclick="viewProduct('${p.id}')"><img src="${firstImg}"><h4>${p.name}</h4><b style="color:var(--primary-red)">${p.price} ج.م</b></div>`;
+                    if (list) list.innerHTML += `<div class="admin-item" style="display:flex; justify-content:space-between; padding:8px; background:#fff; margin-bottom:5px; border-radius:8px; border-right:4px solid var(--primary-red);"><span>${p.name}</span><div><button onclick="prepareEditProd('${p.id}')">📝</button> <button onclick="deleteDoc('products','${p.id}')">🗑️</button></div></div>`;
+                });
+                buildSidebarCategories();
+            });
+
+            // 3. تحميل المنيو السريع (الكتابي)
+            db.collection("digital_menu").orderBy("createdAt", "desc").onSnapshot(snap => {
+                const adminMenuList = document.getElementById('admin-menu-list');
+                if (adminMenuList) {
+                    adminMenuList.innerHTML = '';
+                    snap.forEach(docSnap => {
+                        const item = docSnap.data();
+                        adminMenuList.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid #eee; font-size:12px;"><span><b>${item.name}</b> (${item.section})</span><i class="fa fa-trash" style="color:red; cursor:pointer;" onclick="deleteMenuItem('${docSnap.id}')"></i></div>`;
+                    });
+                }
+            });
+
+            // 4. جلب وعرض الآراء (تم الإصلاح: تعمل تلقائياً الآن)
+            db.collection("reviews").onSnapshot(snap => {
+                const storeDisplay = document.getElementById('reviews-display');
+                const adminList = document.getElementById('admin-reviews-list');
+
+                if (storeDisplay) storeDisplay.innerHTML = '';
+                if (adminList) adminList.innerHTML = '';
+
+                if (snap.empty) {
+                    if (storeDisplay) storeDisplay.innerHTML = '<p style="color:#fff; text-align:center;">كن أول من يكتب رأيه! 😊</p>';
+                } else {
+                    // ترتيب يدوي لضمان عدم حدوث خطأ الترتيب في فيربيز
+                    let reviewsArray = [];
+                    snap.forEach(d => reviewsArray.push({ id: d.id, ...d.data() }));
+                    reviewsArray.sort((a, b) => (b.time || 0) - (a.time || 0));
+
+                    reviewsArray.forEach(r => {
+                        if (storeDisplay) {
+                            storeDisplay.innerHTML += `
+                        <div class="glass-panel" style="padding:15px; margin-bottom:10px; text-align:right; border-right:5px solid var(--accent-gold); animation: fadeIn 0.5s ease;">
+                            <b style="color:var(--primary-red); font-size:16px;">${r.name}</b>
+                            <p style="margin-top:5px; color:#333; line-height:1.4;">${r.text}</p>
+                        </div>`;
+                        }
+                        if (adminList) {
+                            adminList.innerHTML += `
+                        <div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee; background:#fff; margin-bottom:2px;">
+                            <span><b>${r.name}:</b> ${r.text.substring(0, 20)}...</span>
+                            <button onclick="deleteDoc('reviews','${r.id}')" style="color:red; border:none; background:none; cursor:pointer;"><i class="fa fa-trash"></i></button>
+                        </div>`;
+                        }
+                    });
+                }
+            });
+
+            // 5. تحميل المدونة / العروض
+            db.collection("blogs").orderBy("time", "desc").onSnapshot(snap => {
+                const grid = document.getElementById('customer-blog-grid');
+                const adminBlogList = document.getElementById('list-blogs');
+
+                if (grid) grid.innerHTML = '';
+                if (adminBlogList) adminBlogList.innerHTML = '';
+
+                allBlogs = [];
+                snap.forEach(docSnap => {
+                    const b = { id: docSnap.id, ...docSnap.data() }; allBlogs.push(b);
+                    if (grid) grid.innerHTML += `<div class="card glass-panel" onclick="viewBlog('${b.id}')"><img src="${b.img}"><h4>${b.title}</h4></div>`;
+                    if (adminBlogList) adminBlogList.innerHTML += `<div style="display:flex; justify-content:space-between; padding:8px; background:#fff; margin-bottom:5px; border-radius:8px; font-size:12px;"><span>${b.title}</span><button onclick="deleteDoc('blogs','${b.id}')" style="color:red; border:none; background:none; cursor:pointer;"><i class="fa fa-trash"></i></button></div>`;
+                });
+            });
+        }
+
+        // --- دالة إرسال رأي جديد (يجب أن تكون خارج loadAllData لكي يراها زر الإرسال) ---
+        function sendReview() {
+            const nameInput = document.getElementById('rev-name');
+            const textInput = document.getElementById('rev-text');
+            const name = nameInput.value.trim();
+            const text = textInput.value.trim();
+
+            if (!name || !text) {
+                alert("برجاء كتابة الاسم والرأي");
+                return;
+            }
+
+            db.collection("reviews").add({
+                name: name,
+                text: text,
+                time: Date.now()
+            }).then(() => {
+                alert("شكراً لرأيك الجميل! مطعم العسكري يرحب بك ❤️");
+                nameInput.value = '';
+                textInput.value = '';
+            }).catch(err => {
+                console.error(err);
+                alert("حدث خطأ أثناء الإرسال، حاول مرة أخرى");
+            });
+        }
+
+        function renderStoreSlider(images) {
+            const sliderCon = document.getElementById('heroSlider');
+            if (!sliderCon || images.length === 0) return;
+
+            sliderCon.innerHTML = images.map(img => `
+        <div class="slide" style="width:100%;">
+            <img class="slide-img" src="${img}" style="width:90%; height:90%; object-fit:cover; border-radius:20px;">
+        </div>
+    `).join('');
+
+            // ضبط العرض الكلي للسلايدر
+            sliderCon.style.width = (images.length * 100) + "%";
+
+            // ضبط عرض كل شريحة (Slide) بناءً على عدد الصور
+            const allSlides = sliderCon.querySelectorAll('.slide');
+            allSlides.forEach(slide => {
+                slide.style.width = (100 / images.length) + "%";
+            });
+
+            // إعادة تشغيل التوقيت التلقائي للسلايدر
+            if (window.sliderInterval) clearInterval(window.sliderInterval);
+            let current = 0;
+            window.sliderInterval = setInterval(() => {
+                current = (current + 1) % images.length;
+                sliderCon.style.transform = `translateX(${current * (100 / images.length)}%)`;
+            }, 4000);
+        }
+        // --- 3. UI Actions ---
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+        function toggleSearch() {
+            const sb = document.getElementById('search-bar');
+            sb.style.display = (sb.style.display === 'none') ? 'block' : 'none';
+        }
+
+        function viewProduct(id) {
+            const p = allProducts.find(x => x.id === id);
+            const imgs = p.images.split('\n');
+            document.getElementById('modal-body').innerHTML = `
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                    <img id="z-img" src="${imgs[0]}" style="width:100%; border-radius:15px;">
+                    <div>
+                        <h2>${p.name}</h2>
+                        <h3 style="color:var(--primary-red); margin:15px 0;">السعر: ${p.price} ج.م</h3>
+                        <p>${p.subcategory || 'وجبة طازجة وساخنة من العسكري'}</p>
+                        <input type="number" id="prod-qty" value="1" min="1" style="width:70px; padding:10px; margin-top:20px;">
+                        <button class="admin-btn" style="width:100%; margin-top:10px;" onclick="addToCart('${p.id}')">إضافة للطلب 🛒</button>
+                    </div>
+                </div>`;
+            document.getElementById('detail-overlay').style.display = 'block';
+        }
+
+        function addToCart(id) {
+            const qty = parseInt(document.getElementById('prod-qty').value);
+            const p = allProducts.find(x => x.id === id);
+            for (let i = 0; i < qty; i++) cart.push(p);
+            document.getElementById('cart-count').innerText = cart.length;
+            closeModals();
+            alert("تمت إضافة الوجبة لطلبك");
+        }
+
+        function openCheckout() {
+            if (cart.length === 0) return alert("سلة الطلبات فارغة");
+            const con = document.getElementById('cart-list');
+            const subtotal = cart.reduce((s, i) => s + i.price, 0);
+            const grouped = cart.reduce((acc, item) => {
+                acc[item.name] = (acc[item.name] || 0) + 1;
+                return acc;
+            }, {});
+
+            con.innerHTML = Object.keys(grouped).map(name => `
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:5px;">
+                    <span>${name} (x${grouped[name]})</span>
+                    <span>${grouped[name] * cart.find(x => x.name === name).price} ج.م</span>
+                </div>
+            `).join('');
+
+            document.getElementById('total-price-box').innerText = `الإجمالي + التوصيل: ${subtotal + parseInt(settings.ship)} ج.م`;
+            document.getElementById('checkout-overlay').style.display = 'flex';
+        }
+
+        function finalizeOrder() {
+            // 1. جلب بيانات العميل من الخانات
+            const name = document.getElementById('c-name').value;
+            const phone = document.getElementById('c-phone').value;
+            const addr = document.getElementById('c-addr').value;
+
+            // 2. التأكد من إدخال البيانات
+            if (!name || !phone || !addr) {
+                alert("برجاء إدخال الاسم، الموبايل، والعنوان بالكامل");
+                return;
+            }
+
+            if (cart.length === 0) {
+                alert("سلة الطلبات فارغة!");
+                return;
+            }
+
+            // 3. تجميع المنتجات لحساب الكميات (مثلاً كشري x2)
+            const groupedCart = cart.reduce((acc, item) => {
+                acc[item.name] = acc[item.name] || { qty: 0, price: item.price };
+                acc[item.name].qty += 1;
+                return acc;
+            }, {});
+
+            // 4. بناء نص رسالة الواتساب
+            let message = `*طلب جديد من مطعم العسكري* 🥘%0A`;
+            message += `----------------------------%0A`;
+            message += `👤 *الاسم:* ${name}%0A`;
+            message += `📞 *الموبايل:* ${phone}%0A`;
+            message += `📍 *العنوان:* ${addr}%0A`;
+            message += `----------------------------%0A`;
+            message += `🍱 *الطلبات:*%0A`;
+
+            let subtotal = 0;
+            for (let itemName in groupedCart) {
+                const item = groupedCart[itemName];
+                const itemTotal = item.qty * item.price;
+                subtotal += itemTotal;
+                message += `- ${itemName} (عدد ${item.qty}) = ${itemTotal} ج%0A`;
+            }
+
+            // 5. إضافة مصاريف الشحن (إذا كانت محددة في الإعدادات)
+            const shipping = parseInt(settings.ship) || 0;
+            const grandTotal = subtotal + shipping;
+
+            message += `----------------------------%0A`;
+            message += `💰 *إجمالي الوجبات:* ${subtotal} ج.م%0A`;
+            message += `🚚 *توصيل:* ${shipping} ج.م%0A`;
+            message += `✅ *الإجمالي النهائي:* ${grandTotal} ج.م%0A`;
+            message += `----------------------------%0A`;
+            message += `_شكراً لطلبكم من العسكري_ 🙏`;
+
+            // 6. تجهيز رقم الواتساب (تأكد من وجود الكود الدولي 2 قبل الرقم)
+            let restaurantWA = settings.wa || "01027719975"; // رقم افتراضي إذا لم يوجد في الإعدادات
+
+            // تنظيف الرقم من أي مسافات أو رموز
+            restaurantWA = restaurantWA.replace(/\D/g, '');
+
+            // التأكد من أن الرقم يبدأ بـ 20 (كود مصر)
+            if (restaurantWA.startsWith('0')) {
+                restaurantWA = '2' + restaurantWA;
+            } else if (!restaurantWA.startsWith('2')) {
+                restaurantWA = '20' + restaurantWA;
+            }
+
+            // 7. فتح الواتساب في نافذة جديدة
+            const waUrl = `https://api.whatsapp.com/send?phone=${restaurantWA}&text=${message}`;
+            window.open(waUrl, '_blank');
+
+            // 8. تفريغ السلة وإغلاق النافذة بعد الإرسال
+            cart = [];
+            document.getElementById('cart-count').innerText = '0';
+            closeModals();
+            alert("تم تجهيز الفاتورة وفتح الواتساب للإرسال..");
+        }
+
+        // --- 4. Admin Functions ---
+        function loginAdmin() {
+            const p = prompt("كلمة المرور:");
+            if (p === "admin123") { sessionStorage.setItem('isAdmin', 'true'); showAdmin(); }
+        }
+        function showAdmin() { document.getElementById('store-front').style.display = 'none'; document.getElementById('admin-panel').style.display = 'block'; }
+        function backToStore() { document.getElementById('admin-panel').style.display = 'none'; document.getElementById('store-front').style.display = 'block'; }
+
+        function handleProductSave() {
+            const id = document.getElementById('edit-prod-id').value;
+            const data = {
+                name: document.getElementById('adm-name').value,
+                images: document.getElementById('adm-imgs').value,
+                price: parseFloat(document.getElementById('adm-price').value),
+                category: document.getElementById('adm-cat').value,
+                subcategory: document.getElementById('adm-subcat').value
+            };
+            if (id) db.collection("products").doc(id).update(data);
+            else db.collection("products").add(data);
+            alert("تم الحفظ");
+        }
+
+        function handleSettingsSave() {
+            const wa = document.getElementById('adm-wa').value;
+            const ship = document.getElementById('adm-ship').value;
+            db.collection("settings").doc("main").set({ wa, ship });
+            alert("تم حفظ الإعدادات");
+        }
+
+        function deleteDoc(col, id) { if (confirm("حذف نهائي؟")) db.collection(col).doc(id).delete(); }
+        function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
+
+        function downloadProductTemplate() {
+            const data = [["اسم الوجبة", "روابط الصور", "السعر", "التصنيف", "الوصف"]];
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Menu");
+            XLSX.writeFile(wb, "ElAscary_Menu.xlsx");
+        }
+
+        function importProductsFromExcel(e) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const data = new Uint8Array(event.target.result);
+                const wb = XLSX.read(data, { type: 'array' });
+                const sheet = wb.Sheets[wb.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(sheet);
+                rows.forEach(r => {
+                    db.collection("products").add({
+                        name: r["اسم الوجبة"],
+                        images: r["روابط الصور"],
+                        price: r["السعر"],
+                        category: r["التصنيف"],
+                        subcategory: r["الوصف"]
+                    });
+                });
+                alert("تم رفع المنيو بنجاح");
+            };
+            reader.readAsArrayBuffer(e.target.files[0]);
+        }
+
+        function buildSidebarCategories() {
+            const cats = [...new Set(allProducts.map(p => p.category))];
+            const con = document.getElementById('side-categories');
+            con.innerHTML = `<div class="side-item" onclick="filterByCategory('الكل')">عرض الكل</div>`;
+            cats.forEach(c => {
+                if (c) con.innerHTML += `<div class="side-item" onclick="filterByCategory('${c}')">${c}</div>`;
+            });
+        }
+
+        function filterByCategory(cat) {
+            const grid = document.getElementById('customer-product-grid');
+            grid.innerHTML = '';
+            const filtered = cat === 'الكل' ? allProducts : allProducts.filter(p => p.category === cat);
+            filtered.forEach(p => {
+                const firstImg = p.images.split('\n')[0];
+                grid.innerHTML += `<div class="card glass-panel" onclick="viewProduct('${p.id}')">
+                    <img src="${firstImg}">
+                    <h4>${p.name}</h4>
+                    <b style="color:var(--primary-red)">${p.price} ج.م</b>
+                </div>`;
+            });
+            toggleSidebar();
+        }
+        // --- 1. إدارة السلايدر (Slider) ---
+        function handleSliderSave() {
+            const urls = document.getElementById('adm-slider-input').value.split('\n').filter(u => u.trim() !== "");
+            if (urls.length === 0) return alert("برجاء إدخال رابط صورة واحد على الأقل");
+
+            db.collection("settings").doc("slider").set({
+                images: urls
+            }).then(() => alert("✅ تم تحديث صور السلايدر بنجاح"));
+        }
+
+        // وظيفة لعرض السلايدر في الصفحة الرئيسية للعملاء
+        function loadSlider() {
+            db.collection("settings").doc("slider").onSnapshot(doc => {
+                if (doc.exists) {
+                    const imgs = doc.data().images;
+                    const sliderCon = document.getElementById('heroSlider');
+                    sliderCon.innerHTML = imgs.map(url => `
+                <div class="slide" style="width:100%"><img class="slide-img" src="${url}"></div>
+            `).join('');
+                    // إعادة ضبط عرض السلايدر برمجياً
+                    sliderCon.style.width = (imgs.length * 100) + "%";
+                    document.querySelectorAll('.slide').forEach(s => s.style.width = (100 / imgs.length) + "%");
+                }
+            });
+        }
+
+        // --- 2. إدارة المدونة / العروض (Blog) ---
+        function handleBlogSave() {
+            const id = document.getElementById('edit-blog-id').value;
+            const title = document.getElementById('adm-blog-title').value;
+            const img = document.getElementById('adm-blog-img').value;
+            const desc = document.getElementById('adm-blog-desc').value;
+
+            if (!title || !img || !desc) return alert("أكمل بيانات العرض");
+
+            const data = { title, img, desc, time: Date.now() };
+
+            if (id) {
+                db.collection("blogs").doc(id).update(data).then(() => {
+                    alert("✅ تم تعديل العرض");
+                    clearBlogForm();
+                });
+            } else {
+                db.collection("blogs").add(data).then(() => {
+                    alert("✅ تم نشر العرض الجديد");
+                    clearBlogForm();
+                });
+            }
+        }
+
+        function clearBlogForm() {
+            document.getElementById('edit-blog-id').value = '';
+            document.getElementById('adm-blog-title').value = '';
+            document.getElementById('adm-blog-img').value = '';
+            document.getElementById('adm-blog-desc').value = '';
+        }
+
+        // وظيفة عرض المدونة بشكل احترافي للعميل
+        function viewBlog(id) {
+            const b = allBlogs.find(x => x.id === id);
+            document.getElementById('modal-body').innerHTML = `
+        <div style="text-align:center;">
+            <img src="${b.img}" style="width:100%; border-radius:15px; max-height:400px; object-fit:cover;">
+            <h2 style="color:var(--primary-red); margin:20px 0;">${b.title}</h2>
+            <p style="line-height:1.8; font-size:16px; color:#444; white-space: pre-wrap;">${b.desc}</p>
+            <button class="admin-btn" style="margin-top:20px; width:100%;" onclick="contactSupport()">اطلب الآن واستفيد من العرض 😋</button>
+        </div>
+    `;
+            document.getElementById('detail-overlay').style.display = 'block';
+        }
+
+        // --- 3. وظيفة حفظ مجمعة للشحن والتواصل ---
+        function saveAllContactAndShip() {
+            const deliveryNumbers = document.getElementById('adm-delivery-nums').value;
+            const supportNumber = document.getElementById('adm-support-num').value;
+            const govName = document.getElementById('adm-gov-name').value;
+            const govPrice = document.getElementById('adm-gov-price').value;
+
+            let updateData = { deliveryNumbers, supportNumber };
+
+            if (govPrice) {
+                let currentGovs = settings.govShipping || {};
+                currentGovs[govName] = govPrice;
+                updateData.govShipping = currentGovs;
+            }
+
+            db.collection("settings").doc("main").update(updateData).then(() => {
+                alert("✅ تم حفظ كافة إعدادات التواصل والشحن");
+                document.getElementById('adm-gov-price').value = '';
+            });
+        }
+        window.onload = function () {
+            loadAllData();
+            loadSlider(); // استدعاء السلايدر المخصص
+            if (sessionStorage.getItem('isAdmin') === 'true') showAdmin();
+        };
+
+        function sendReview() {
+            const name = document.getElementById('rev-name').value;
+            const text = document.getElementById('rev-text').value;
+            if (name && text) db.collection("reviews").add({ name, text, time: Date.now() });
+            document.getElementById('rev-text').value = '';
+        }
+
+        function logoutAdmin() { sessionStorage.removeItem('isAdmin'); location.reload(); }
+
+        // Slider Logic
+        let currentSlide = 0;
+        setInterval(() => {
+            currentSlide = (currentSlide + 1) % 3;
+            document.getElementById('heroSlider').style.transform = `translateX(${currentSlide * 100}%)`;
+        }, 4000);
+        // --- وظائف المنيو الرقمي ---
+
+        // إضافة صنف للمنيو من لوحة التحكم
+        // 1. دالة إضافة صنف جديد للمنيو
+        function addMenuItem() {
+            // جلب القيم من الخانات
+            const itemName = document.getElementById('menu-item-name').value;
+            const itemPrice = document.getElementById('menu-item-price').value;
+            const itemSection = document.getElementById('menu-item-section').value;
+
+            // التأكد من أن الخانات ليست فارغة
+            if (!itemName || !itemPrice || !itemSection) {
+                alert("برجاء ملء جميع البيانات: الاسم، السعر، والركن");
+                return;
+            }
+
+            // إرسال البيانات للفيربيز
+            db.collection("digital_menu").add({
+                name: itemName,
+                price: parseFloat(itemPrice),
+                section: itemSection,
+                createdAt: Date.now()
+            })
+                .then(() => {
+                    alert("✅ تم إضافة " + itemName + " للمنيو بنجاح");
+                    // تفريغ الخانات بعد الإضافة
+                    document.getElementById('menu-item-name').value = '';
+                    document.getElementById('menu-item-price').value = '';
+                })
+                .catch((error) => {
+                    console.error("خطأ في الإضافة: ", error);
+                    alert("حدث خطأ أثناء الإضافة، حاول مرة أخرى");
+                });
+        }
+
+        // 2. دالة جلب وعرض الأصناف في لوحة الإدارة (للحذف)
+        // تعمل تلقائياً لتحديث القائمة أمام المسؤول
+        db.collection("digital_menu").orderBy("createdAt", "desc").onSnapshot(snap => {
+            const adminList = document.getElementById('admin-menu-list');
+            if (!adminList) return;
+
+            adminList.innerHTML = ''; // مسح القائمة الحالية
+
+            if (snap.empty) {
+                adminList.innerHTML = '<p style="text-align:center; color:gray;">لا توجد أصناف في المنيو حالياً</p>';
+                return;
+            }
+
+            snap.forEach(doc => {
+                const item = doc.data();
+                adminList.innerHTML += `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid #eee; font-size:13px;">
+                <span><b>${item.name}</b> (${item.section}) - ${item.price}ج</span>
+                <button onclick="deleteMenuItem('${doc.id}')" style="background:none; border:none; color:red; cursor:pointer;">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
+        `;
+            });
+        });
+
+        // 3. دالة حذف صنف من المنيو
+        function deleteMenuItem(id) {
+            if (confirm("هل أنت متأكد من حذف هذا الصنف من المنيو؟")) {
+                db.collection("digital_menu").doc(id).delete()
+                    .then(() => { console.log("تم الحذف"); })
+                    .catch((err) => { alert("خطأ في الحذف"); });
+            }
+        }
+
+        // جلب وعرض المنيو للزبائن
+        function openDigitalMenu() {
+            db.collection("digital_menu").orderBy("section").onSnapshot(snap => {
+                const container = document.getElementById('digital-menu-content');
+                container.innerHTML = '';
+
+                let currentSection = "";
+                let sectionHTML = "";
+
+                snap.forEach(doc => {
+                    const item = doc.data();
+
+                    if (item.section !== currentSection) {
+                        currentSection = item.section;
+                        container.innerHTML += `<h3 style="background: var(--accent-gold); color: #000; padding: 5px 15px; margin-top: 20px; border-radius: 5px; font-size: 18px; text-align: center;">${currentSection}</h3>`;
+                    }
+
+                    container.innerHTML += `
+                <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px dotted #ccc; padding: 8px 5px;">
+                    <span style="font-weight: bold; color: #333;">${item.name}</span>
+                    <span style="flex-grow: 1; border-bottom: 1px dotted #999; margin: 0 10px;"></span>
+                    <span style="color: var(--primary-red); font-weight: bold;">${item.price} ج.م</span>
+                </div>
+            `;
+                });
+
+                document.getElementById('digital-menu-overlay').style.display = 'block';
+            });
+        }
+
+        // عرض المنيو في لوحة التحكم مع زر الحذف
+        db.collection("digital_menu").onSnapshot(snap => {
+            const list = document.getElementById('admin-menu-list');
+            list.innerHTML = '';
+            snap.forEach(doc => {
+                const item = doc.data();
+                list.innerHTML += `
+            <div style="display:flex; justify-content:space-between; background:#fff; padding:5px; margin-bottom:2px; border:1px solid #ddd;">
+                <span>${item.name} (${item.section})</span>
+                <i class="fa fa-trash" style="color:red; cursor:pointer;" onclick="deleteMenuItem('${doc.id}')"></i>
+            </div>
+        `;
+            });
+        });
+
+        function deleteMenuItem(id) {
+            if (confirm("هل تريد حذف هذا الصنف من المنيو؟")) {
+                db.collection("digital_menu").doc(id).delete();
+            }
+        }
+        // --- وظيفة حفظ أرقام التواصل ---
+        function saveContactSettings() {
+            const deliveryNums = document.getElementById('adm-delivery-nums').value;
+            const supportNum = document.getElementById('adm-support-num').value;
+
+            db.collection("settings").doc("main").update({
+                deliveryNumbers: deliveryNums,
+                supportNumber: supportNum
+            }).then(() => alert("✅ تم تحديث أرقام التواصل والدعم"));
+        }
+
+        // --- وظيفة حفظ شحن المحافظات ---
+        function saveGovShipping() {
+            const govName = document.getElementById('adm-gov-name').value;
+            const govPrice = document.getElementById('adm-gov-price').value;
+
+            if (!govPrice) return alert("برجاء إدخال السعر");
+
+            let currentGovs = settings.govShipping || {};
+            currentGovs[govName] = govPrice;
+
+            db.collection("settings").doc("main").update({
+                govShipping: currentGovs
+            }).then(() => {
+                alert("✅ تم حفظ شحن " + govName);
+                updateGovPreview();
+            });
+        }
+
+        // تحديث معاينة الأسعار للمسؤول
+        function updateGovPreview() {
+            const div = document.getElementById('gov-prices-preview');
+            if (!div || !settings.govShipping) return;
+            div.innerHTML = "<b>الأسعار الحالية:</b><br>";
+            for (let gov in settings.govShipping) {
+                div.innerHTML += gov + ": " + settings.govShipping[gov] + " ج.م <br>";
+            }
+        }
+
+        // --- وظيفة عرض أرقام الدليفري للعملاء (زر اطلب دليفري) ---
+        function contactSupport() {
+            const deliveryNums = settings.deliveryNumbers ? settings.deliveryNumbers.split('\n') : ["01279098707", "01118517752", "01027719975", "01227851260", "01206108410"];
+            const supportNum = settings.supportNumber || "01027719975";
+
+            let html = `<h3 style="color:var(--primary-red); margin-bottom:15px; text-align:center;">اطلب دليفري العسكري 🛵</h3>`;
+            deliveryNums.forEach(num => {
+                if (num.trim() != "") {
+                    html += `
+            <a href="tel:${num.trim()}" style="display:block; background:#27ae60; color:#fff; padding:12px; margin-bottom:10px; text-decoration:none; border-radius:10px; text-align:center; font-weight:bold;">
+                <i class="fa fa-phone-alt"></i> إتصال: ${num.trim()}
+            </a>`;
+                }
+            });
+
+            html += `<hr style="margin:15px 0;">`;
+            html += `<h4 style="text-align:center;">خدمة العملاء والشكاوى 💬</h4>`;
+            html += `
+    <a href="https://wa.me/2${supportNum.replace(/\D/g, '')}" target="_blank" style="display:block; background:#25d366; color:#fff; padding:12px; text-decoration:none; border-radius:10px; text-align:center; font-weight:bold;">
+        <i class="fab fa-whatsapp"></i> راسلنا واتساب: ${supportNum}
+    </a>`;
+
+            document.getElementById('modal-body').innerHTML = html;
+            document.getElementById('detail-overlay').style.display = 'block';
+        }
+
+        // --- وظيفة عرض أسعار الشحن للعملاء (توصيل سريع لكل مكان) ---
+        function showShippingInfo() {
+            const govs = settings.govShipping || {};
+            let html = `<h3 style="color:var(--primary-red); margin-bottom:15px; text-align:center;">مصاريف الشحن والتوصيل 🚚</h3>`;
+            html += `<div style="max-height:300px; overflow-y:auto;">`;
+
+            if (Object.keys(govs).length === 0) {
+                html += `<p style="text-align:center; color:gray;">جاري تحديث قائمة الأسعار...</p>`;
+            } else {
+                for (let gov in govs) {
+                    html += `
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:10px;">
+                <span style="font-weight:bold;">${gov}</span>
+                <span style="color:var(--primary-red); font-weight:bold;">${govs[gov]} ج.م</span>
+            </div>`;
+                }
+            }
+
+            html += `</div><p style="font-size:11px; color:gray; margin-top:15px; text-align:center;">* يتم إضافة السعر تلقائياً عند اختيار المحافظة في الطلب</p>`;
+
+            document.getElementById('modal-body').innerHTML = html;
+            document.getElementById('detail-overlay').style.display = 'block';
+        }
+
+        window.onscroll = () => { document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50); };
+    </script>
+</body>
+
+</html>
